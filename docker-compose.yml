@@ -1,13 +1,25 @@
 version: '3.8'
 
 services:
+
+  migrate:
+    image: migrate/migrate:latest
+    entrypoint: ["migrate"]
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      auth_service_mysql:
+        condition: service_healthy
+
   auth_service_app:
     build:
       context: .
-      dockerfile: docker/auth_service/Dockerfile
+      dockerfile: docker/app/Dockerfile
     container_name: auth_service_app
     ports:
       - "127.0.0.1:8080:8080"
+    env_file:
+      - .env
     depends_on:
       auth_service_mysql:
         condition: service_healthy

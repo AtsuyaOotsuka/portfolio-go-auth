@@ -45,7 +45,7 @@ func SetupRouter(db *gorm.DB, sqlDB *sql.DB) (*gin.Engine, func()) {
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("envファイルの読み込みに失敗しました。")
+		log.Println("No .env file found")
 	}
 
 	mode := os.Getenv("GIN_MODE")
