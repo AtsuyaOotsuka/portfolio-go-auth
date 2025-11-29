@@ -1,7 +1,6 @@
 package svc_mock
 
 import (
-	"github.com/AtsuyaOotsuka/portfolio-go-lib/atylabcsrf"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -10,10 +9,18 @@ type CsrfSvcMockStruct struct {
 }
 
 func (m *CsrfSvcMockStruct) CreateCSRFToken(
-	csrf atylabcsrf.CsrfPkgInterface,
 	timestamp int64,
 	secret string,
 ) string {
-	args := m.Called(csrf, timestamp, secret)
+	args := m.Called(timestamp, secret)
 	return args.String(0)
+}
+
+func (m *CsrfSvcMockStruct) Verify(
+	token string,
+	secret string,
+	timestamp int64,
+) error {
+	args := m.Called(token, secret, timestamp)
+	return args.Error(0)
 }

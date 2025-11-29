@@ -3,24 +3,34 @@ package service
 import "github.com/AtsuyaOotsuka/portfolio-go-lib/atylabcsrf"
 
 type CsrfSvcInterface interface {
-	CreateCSRFToken(
-		csrf atylabcsrf.CsrfPkgInterface,
-		timestamp int64,
-		secret string,
-	) string
+	CreateCSRFToken(timestamp int64, secret string) string
+	Verify(token string, secret string, timestamp int64) error
 }
 
-type CsrfSvcStruct struct{}
+type CsrfSvcStruct struct {
+	csrf atylabcsrf.CsrfPkgInterface
+}
 
-func NewCsrfSvcStruct() CsrfSvcInterface {
-	return &CsrfSvcStruct{}
+func NewCsrfSvcStruct(
+	csrf atylabcsrf.CsrfPkgInterface,
+) CsrfSvcInterface {
+	return &CsrfSvcStruct{
+		csrf: csrf,
+	}
 }
 
 func (s *CsrfSvcStruct) CreateCSRFToken(
-	csrf atylabcsrf.CsrfPkgInterface,
 	timestamp int64,
 	secret string,
 ) string {
-	nonceStr := csrf.GenerateNonceString()
-	return csrf.GenerateCSRFCookieToken(secret, timestamp, nonceStr)
+	nonceStr := s.csrf.GenerateNonceString()
+	return s.csrf.GenerateCSRFCookieToken(secret, timestamp, nonceStr)
+}
+
+func (s *CsrfSvcStruct) Verify(
+	token string,
+	secret string,
+	timestamp int64,
+) error {
+	return s.csrf.ValidateCSRFCookieToken(token, secret, timestamp)
 }

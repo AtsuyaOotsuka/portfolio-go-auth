@@ -61,21 +61,33 @@
 				
 				<option value="file2">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/handler/healthcheck_handler.go (100.0%)</option>
 				
-				<option value="file3">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/middleware/base_mw.go (100.0%)</option>
+				<option value="file3">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/handler/register_handler.go (0.0%)</option>
 				
-				<option value="file4">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing/base_routing.go (100.0%)</option>
+				<option value="file4">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/middleware/base_mw.go (100.0%)</option>
 				
-				<option value="file5">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing/csrf_routing.go (100.0%)</option>
+				<option value="file5">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/middleware/csrf_mw.go (10.5%)</option>
 				
-				<option value="file6">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing/healthcheck_routing.go (100.0%)</option>
+				<option value="file6">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/models/user.go (0.0%)</option>
 				
-				<option value="file7">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service/csrf_svc.go (100.0%)</option>
+				<option value="file7">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing/base_routing.go (100.0%)</option>
 				
-				<option value="file8">github.com/AtsuyaOotsuka/portfolio-go-auth/main.go (0.0%)</option>
+				<option value="file8">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing/csrf_routing.go (100.0%)</option>
 				
-				<option value="file9">github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/funcs/env_helper.go (0.0%)</option>
+				<option value="file9">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing/healthcheck_routing.go (100.0%)</option>
 				
-				<option value="file10">github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/mocks/svc_mock/csrf_svc_mock.go (0.0%)</option>
+				<option value="file10">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing/register_routing.go (0.0%)</option>
+				
+				<option value="file11">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service/csrf_svc.go (75.0%)</option>
+				
+				<option value="file12">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service/user_register_svc.go (0.0%)</option>
+				
+				<option value="file13">github.com/AtsuyaOotsuka/portfolio-go-auth/main.go (0.0%)</option>
+				
+				<option value="file14">github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabencrypt/encrypt.go (0.0%)</option>
+				
+				<option value="file15">github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/funcs/env_helper.go (0.0%)</option>
+				
+				<option value="file16">github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/mocks/svc_mock/csrf_svc_mock.go (0.0%)</option>
 				
 				</select>
 			</div>
@@ -98,19 +110,23 @@ import (
         "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/middleware"
         "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing"
         "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service"
+        "github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabencrypt"
         "github.com/AtsuyaOotsuka/portfolio-go-lib/atylabcsrf"
         "github.com/gin-gonic/gin"
         "gorm.io/gorm"
 )
 
 type App struct {
+        db         *gorm.DB
         middleware *middleware.Middleware
         gin        *gin.Engine
 }
 
 func NewApp(db *gorm.DB, sqlDB *sql.DB) (*App, func(), error) <span class="cov8" title="1">{
 
-        app := &amp;App{}
+        app := &amp;App{
+                db: db,
+        }
 
         cleanup := func() </span><span class="cov8" title="1">{ sqlDB.Close() }</span>
         <span class="cov8" title="1">return app, cleanup, nil</span>
@@ -121,9 +137,10 @@ func (a *App) initMiddlewares() <span class="cov8" title="1">{
         a.middleware = middleware.NewMiddleware(a.gin)
 }</span>
 
-func (a *App) entryBeforeGlobalMiddleware() {<span class="cov8" title="1">
+func (a *App) entryBeforeGlobalMiddleware() <span class="cov8" title="1">{
         // 前処理系ミドルウェアをここに追加
         // a.gin.Use(a.middleware.Firewall)
+        a.gin.Use(a.middleware.Csrf)
 }</span>
 
 func (a *App) entryAfterGlobalMiddleware() {<span class="cov8" title="1">
@@ -135,9 +152,18 @@ func (a *App) initRoutes() <span class="cov8" title="1">{
         routing := routing.NewRouting(a.gin, a.middleware)
         routing.HealthCheckRoute(handler.NewHealthCheckHandler())
         routing.CsrfRoute(handler.NewCSRFHandler(
-                service.NewCsrfSvcStruct(),
-                atylabcsrf.NewCsrfPkgStruct(),
+                service.NewCsrfSvcStruct(
+                        atylabcsrf.NewCsrfPkgStruct(),
+                ),
         ))
+        routing.RegisterRouting(
+                handler.NewRegisterHandler(
+                        service.NewUserRegisterSvc(
+                                a.db,
+                                atylabencrypt.NewEncryptPkg(),
+                        ),
+                ),
+        )
 }</span>
 
 func (a *App) Init(g *gin.Engine) <span class="cov8" title="1">{
@@ -157,7 +183,6 @@ import (
         "time"
 
         "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service"
-        "github.com/AtsuyaOotsuka/portfolio-go-lib/atylabcsrf"
         "github.com/gin-gonic/gin"
 )
 
@@ -168,22 +193,19 @@ type CSRFHandlerInterface interface {
 type CSRFHandlerStruct struct {
         BaseHandler
         service service.CsrfSvcInterface
-        csrflib atylabcsrf.CsrfPkgInterface
 }
 
 func NewCSRFHandler(
         service service.CsrfSvcInterface,
-        csrflib atylabcsrf.CsrfPkgInterface,
 ) *CSRFHandlerStruct <span class="cov8" title="1">{
         return &amp;CSRFHandlerStruct{
-                csrflib: csrflib,
                 service: service,
         }
 }</span>
 
 func (h *CSRFHandlerStruct) CsrfGet(c *gin.Context) <span class="cov8" title="1">{
         secret := os.Getenv("CSRF_TOKEN")
-        token := h.service.CreateCSRFToken(h.csrflib, time.Now().Unix(), secret)
+        token := h.service.CreateCSRFToken(time.Now().Unix(), secret)
         c.SetCookie("csrf_token", token, 3600, "/", "", false, true)
         c.JSON(200, gin.H{
                 "csrf_token": token,
@@ -214,22 +236,176 @@ func (h *HealthCheckHandler) Check(c *gin.Context) <span class="cov8" title="1">
 }</span>
 </pre>
 		
-		<pre class="file" id="file3" style="display: none">package middleware
+		<pre class="file" id="file3" style="display: none">package handler
 
-import "github.com/gin-gonic/gin"
+import (
+        "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service"
+        "github.com/gin-gonic/gin"
+)
+
+type RegisterHandlerInterface interface {
+        Register(c *gin.Context)
+}
+
+type RegisterHandlerStruct struct {
+        BaseHandler
+        service service.UserRegisterSvcInterface
+}
+
+func NewRegisterHandler(
+        service service.UserRegisterSvcInterface,
+) *RegisterHandlerStruct <span class="cov0" title="0">{
+        return &amp;RegisterHandlerStruct{
+                service: service,
+        }
+}</span>
+
+type registerRequest struct {
+        Name     string `form:"name" json:"name" binding:"required"`
+        Email    string `form:"email" json:"email" binding:"required,email"`
+        Password string `form:"password" json:"password" binding:"required,min=8"`
+}
+
+func (h *RegisterHandlerStruct) Register(c *gin.Context) <span class="cov0" title="0">{
+        var req registerRequest
+        if err := c.ShouldBind(&amp;req); err != nil </span><span class="cov0" title="0">{
+                c.JSON(400, gin.H{"error": err.Error()})
+                return
+        }</span>
+
+        <span class="cov0" title="0">input := service.RegisterUserInput{
+                Name:         req.Name,
+                Email:        req.Email,
+                PasswordHash: req.Password,
+        }
+
+        user, err := h.service.RegisterUser(input)
+        if err != nil </span><span class="cov0" title="0">{
+                c.JSON(500, gin.H{"error": err.Error()})
+                return
+        }</span>
+
+        <span class="cov0" title="0">c.JSON(200, gin.H{
+                "uuid":     user.UUID,
+                "username": user.Username,
+                "email":    user.Email,
+        })</span>
+
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package middleware
+
+import (
+        "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service"
+        "github.com/AtsuyaOotsuka/portfolio-go-lib/atylabcsrf"
+        "github.com/gin-gonic/gin"
+)
 
 type Middleware struct {
-        g *gin.Engine
+        g    *gin.Engine
+        Csrf gin.HandlerFunc
 }
 
 func NewMiddleware(r *gin.Engine) *Middleware <span class="cov8" title="1">{
+
+        csrf := NewCSRFMiddleware(
+                service.NewCsrfSvcStruct(
+                        atylabcsrf.NewCsrfPkgStruct(),
+                ),
+        )
+
         return &amp;Middleware{
-                g: r,
+                g:    r,
+                Csrf: csrf.Handler(),
         }
 }</span>
 </pre>
 		
-		<pre class="file" id="file4" style="display: none">package routing
+		<pre class="file" id="file5" style="display: none">package middleware
+
+import (
+        "net/http"
+        "os"
+        "time"
+
+        "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service"
+        "github.com/gin-gonic/gin"
+)
+
+type CSRFMiddlewareInterface interface {
+        Handler() gin.HandlerFunc
+}
+
+type CSRFMiddleware struct {
+        csrf service.CsrfSvcInterface
+}
+
+func NewCSRFMiddleware(
+        v service.CsrfSvcInterface,
+) CSRFMiddlewareInterface <span class="cov8" title="1">{
+        return &amp;CSRFMiddleware{
+                csrf: v,
+        }
+}</span>
+
+func (m *CSRFMiddleware) Handler() gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov0" title="0">{
+                if c.Request.Method == http.MethodGet || c.Request.Method == http.MethodHead </span><span class="cov0" title="0">{
+                        c.Next()
+                        return
+                }</span>
+                <span class="cov0" title="0">token := c.GetHeader("X-CSRF-Token")
+                if token == "" </span><span class="cov0" title="0">{
+                        token = c.PostForm("_token")
+                }</span>
+                <span class="cov0" title="0">if token == "" </span><span class="cov0" title="0">{
+                        cookie, err := c.Cookie("csrf_token")
+                        if err == nil </span><span class="cov0" title="0">{
+                                token = cookie
+                        }</span>
+                }
+                <span class="cov0" title="0">if token == "" </span><span class="cov0" title="0">{
+                        c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "not set csrf token"})
+                        return
+                }</span>
+                <span class="cov0" title="0">if err := m.csrf.Verify(
+                        token,
+                        os.Getenv("CSRF_TOKEN"),
+                        time.Now().Unix(),
+                ); err != nil </span><span class="cov0" title="0">{
+                        c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "invalid csrf token"})
+                        return
+                }</span>
+                <span class="cov0" title="0">c.Next()</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package models
+
+import (
+        "time"
+
+        "github.com/google/uuid"
+)
+
+type User struct {
+        ID           uint      `gorm:"primaryKey;autoIncrement"`
+        UUID         string    `gorm:"type:char(36);uniqueIndex;not null"`
+        Username     string    `gorm:"type:varchar(255);uniqueIndex;not null"`
+        Email        string    `gorm:"type:varchar(255);uniqueIndex;not null"`
+        PasswordHash string    `gorm:"type:varchar(255);not null"`
+        CreatedAt    time.Time `gorm:"autoCreateTime"`
+        UpdatedAt    time.Time `gorm:"autoUpdateTime"`
+}
+
+func CreateUUID() string <span class="cov0" title="0">{
+        return uuid.New().String()
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package routing
 
 import (
         "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/middleware"
@@ -252,7 +428,7 @@ func NewRouting(
 }</span>
 </pre>
 		
-		<pre class="file" id="file5" style="display: none">package routing
+		<pre class="file" id="file8" style="display: none">package routing
 
 import "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/handler"
 
@@ -264,7 +440,7 @@ func (r *Routing) CsrfRoute(
 }</span>
 </pre>
 		
-		<pre class="file" id="file6" style="display: none">package routing
+		<pre class="file" id="file9" style="display: none">package routing
 
 import "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/handler"
 
@@ -275,35 +451,115 @@ func (r *Routing) HealthCheckRoute(
 }</span>
 </pre>
 		
-		<pre class="file" id="file7" style="display: none">package service
+		<pre class="file" id="file10" style="display: none">package routing
+
+import "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/handler"
+
+func (r *Routing) RegisterRouting(
+        registerHandler handler.RegisterHandlerInterface,
+) <span class="cov0" title="0">{
+        r.gin.POST("/register", registerHandler.Register)
+}</span>
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package service
 
 import "github.com/AtsuyaOotsuka/portfolio-go-lib/atylabcsrf"
 
 type CsrfSvcInterface interface {
-        CreateCSRFToken(
-                csrf atylabcsrf.CsrfPkgInterface,
-                timestamp int64,
-                secret string,
-        ) string
+        CreateCSRFToken(timestamp int64, secret string) string
+        Verify(token string, secret string, timestamp int64) error
 }
 
-type CsrfSvcStruct struct{}
+type CsrfSvcStruct struct {
+        csrf atylabcsrf.CsrfPkgInterface
+}
 
-func NewCsrfSvcStruct() CsrfSvcInterface <span class="cov8" title="1">{
-        return &amp;CsrfSvcStruct{}
+func NewCsrfSvcStruct(
+        csrf atylabcsrf.CsrfPkgInterface,
+) CsrfSvcInterface <span class="cov8" title="1">{
+        return &amp;CsrfSvcStruct{
+                csrf: csrf,
+        }
 }</span>
 
 func (s *CsrfSvcStruct) CreateCSRFToken(
-        csrf atylabcsrf.CsrfPkgInterface,
         timestamp int64,
         secret string,
 ) string <span class="cov8" title="1">{
-        nonceStr := csrf.GenerateNonceString()
-        return csrf.GenerateCSRFCookieToken(secret, timestamp, nonceStr)
+        nonceStr := s.csrf.GenerateNonceString()
+        return s.csrf.GenerateCSRFCookieToken(secret, timestamp, nonceStr)
+}</span>
+
+func (s *CsrfSvcStruct) Verify(
+        token string,
+        secret string,
+        timestamp int64,
+) error <span class="cov0" title="0">{
+        return s.csrf.ValidateCSRFCookieToken(token, secret, timestamp)
 }</span>
 </pre>
 		
-		<pre class="file" id="file8" style="display: none">package main
+		<pre class="file" id="file12" style="display: none">package service
+
+import (
+        "strings"
+
+        "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/models"
+        "github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabencrypt"
+        "gorm.io/gorm"
+)
+
+type UserRegisterSvcInterface interface {
+        RegisterUser(input RegisterUserInput) (models.User, error)
+}
+
+type UserRegisterSvcStruct struct {
+        db         *gorm.DB
+        encryptlib atylabencrypt.EncryptPkgInterface
+}
+
+func NewUserRegisterSvc(
+        db *gorm.DB,
+        encryptlib atylabencrypt.EncryptPkgInterface,
+) *UserRegisterSvcStruct <span class="cov0" title="0">{
+        return &amp;UserRegisterSvcStruct{
+                db:         db,
+                encryptlib: encryptlib,
+        }
+}</span>
+
+type RegisterUserInput struct {
+        Name         string
+        Email        string
+        PasswordHash string
+}
+
+func (s *UserRegisterSvcStruct) RegisterUser(
+        input RegisterUserInput,
+) (models.User, error) <span class="cov0" title="0">{
+        email := strings.TrimSpace(strings.ToLower(input.Email))
+        hashedPassword, err := s.encryptlib.CreatePasswordHash(input.PasswordHash)
+        if err != nil </span><span class="cov0" title="0">{
+                return models.User{}, err
+        }</span>
+
+        <span class="cov0" title="0">user := models.User{
+                UUID:         models.CreateUUID(),
+                Username:     input.Name,
+                Email:        email,
+                PasswordHash: hashedPassword,
+        }
+
+        if err := s.db.Create(&amp;user).Error; err != nil </span><span class="cov0" title="0">{
+                return models.User{}, err
+        }</span>
+
+        <span class="cov0" title="0">return user, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package main
 
 import (
         "database/sql"
@@ -350,7 +606,7 @@ func SetupRouter(db *gorm.DB, sqlDB *sql.DB) (*gin.Engine, func()) <span class="
 func main() <span class="cov0" title="0">{
         err := godotenv.Load()
         if err != nil </span><span class="cov0" title="0">{
-                log.Fatal("envファイルの読み込みに失敗しました。")
+                log.Println("No .env file found")
         }</span>
 
         <span class="cov0" title="0">mode := os.Getenv("GIN_MODE")
@@ -371,7 +627,30 @@ func main() <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file9" style="display: none">package funcs
+		<pre class="file" id="file14" style="display: none">package atylabencrypt
+
+import "golang.org/x/crypto/bcrypt"
+
+type EncryptPkgInterface interface {
+        CreatePasswordHash(password string) (string, error)
+}
+
+type EncryptPkgStruct struct{}
+
+func NewEncryptPkg() *EncryptPkgStruct <span class="cov0" title="0">{
+        return &amp;EncryptPkgStruct{}
+}</span>
+
+func (e *EncryptPkgStruct) CreatePasswordHash(password string) (string, error) <span class="cov0" title="0">{
+        hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+        <span class="cov0" title="0">return string(hashedPassword), nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package funcs
 
 import (
         "os"
@@ -409,10 +688,9 @@ func WithEnvMap(envs Envs, t *testing.T, fn func()) <span class="cov0" title="0"
 }
 </pre>
 		
-		<pre class="file" id="file10" style="display: none">package svc_mock
+		<pre class="file" id="file16" style="display: none">package svc_mock
 
 import (
-        "github.com/AtsuyaOotsuka/portfolio-go-lib/atylabcsrf"
         "github.com/stretchr/testify/mock"
 )
 
@@ -421,12 +699,20 @@ type CsrfSvcMockStruct struct {
 }
 
 func (m *CsrfSvcMockStruct) CreateCSRFToken(
-        csrf atylabcsrf.CsrfPkgInterface,
         timestamp int64,
         secret string,
 ) string <span class="cov0" title="0">{
-        args := m.Called(csrf, timestamp, secret)
+        args := m.Called(timestamp, secret)
         return args.String(0)
+}</span>
+
+func (m *CsrfSvcMockStruct) Verify(
+        token string,
+        secret string,
+        timestamp int64,
+) error <span class="cov0" title="0">{
+        args := m.Called(token, secret, timestamp)
+        return args.Error(0)
 }</span>
 </pre>
 		
