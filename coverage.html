@@ -1,0 +1,462 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>app: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/app/app.go (100.0%)</option>
+				
+				<option value="file1">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/handler/csrf_handler.go (100.0%)</option>
+				
+				<option value="file2">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/handler/healthcheck_handler.go (100.0%)</option>
+				
+				<option value="file3">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/middleware/base_mw.go (100.0%)</option>
+				
+				<option value="file4">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing/base_routing.go (100.0%)</option>
+				
+				<option value="file5">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing/csrf_routing.go (100.0%)</option>
+				
+				<option value="file6">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing/healthcheck_routing.go (100.0%)</option>
+				
+				<option value="file7">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service/csrf_svc.go (100.0%)</option>
+				
+				<option value="file8">github.com/AtsuyaOotsuka/portfolio-go-auth/main.go (0.0%)</option>
+				
+				<option value="file9">github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/funcs/env_helper.go (0.0%)</option>
+				
+				<option value="file10">github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/mocks/svc_mock/csrf_svc_mock.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package app
+
+import (
+        "database/sql"
+
+        "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/handler"
+        "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/middleware"
+        "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing"
+        "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service"
+        "github.com/AtsuyaOotsuka/portfolio-go-lib/atylabcsrf"
+        "github.com/gin-gonic/gin"
+        "gorm.io/gorm"
+)
+
+type App struct {
+        middleware *middleware.Middleware
+        gin        *gin.Engine
+}
+
+func NewApp(db *gorm.DB, sqlDB *sql.DB) (*App, func(), error) <span class="cov8" title="1">{
+
+        app := &amp;App{}
+
+        cleanup := func() </span><span class="cov8" title="1">{ sqlDB.Close() }</span>
+        <span class="cov8" title="1">return app, cleanup, nil</span>
+}
+
+func (a *App) initMiddlewares() <span class="cov8" title="1">{
+        // ミドルウェアの初期化
+        a.middleware = middleware.NewMiddleware(a.gin)
+}</span>
+
+func (a *App) entryBeforeGlobalMiddleware() {<span class="cov8" title="1">
+        // 前処理系ミドルウェアをここに追加
+        // a.gin.Use(a.middleware.Firewall)
+}</span>
+
+func (a *App) entryAfterGlobalMiddleware() {<span class="cov8" title="1">
+        // 後処理系ミドルウェアをここに追加
+}</span>
+
+func (a *App) initRoutes() <span class="cov8" title="1">{
+        // ルーティングの初期化
+        routing := routing.NewRouting(a.gin, a.middleware)
+        routing.HealthCheckRoute(handler.NewHealthCheckHandler())
+        routing.CsrfRoute(handler.NewCSRFHandler(
+                service.NewCsrfSvcStruct(),
+                atylabcsrf.NewCsrfPkgStruct(),
+        ))
+}</span>
+
+func (a *App) Init(g *gin.Engine) <span class="cov8" title="1">{
+        a.gin = g
+        a.initMiddlewares()
+        a.entryBeforeGlobalMiddleware()
+        a.initRoutes()
+        a.entryAfterGlobalMiddleware()
+
+}</span>
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package handler
+
+import (
+        "os"
+        "time"
+
+        "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service"
+        "github.com/AtsuyaOotsuka/portfolio-go-lib/atylabcsrf"
+        "github.com/gin-gonic/gin"
+)
+
+type CSRFHandlerInterface interface {
+        CsrfGet(c *gin.Context)
+}
+
+type CSRFHandlerStruct struct {
+        BaseHandler
+        service service.CsrfSvcInterface
+        csrflib atylabcsrf.CsrfPkgInterface
+}
+
+func NewCSRFHandler(
+        service service.CsrfSvcInterface,
+        csrflib atylabcsrf.CsrfPkgInterface,
+) *CSRFHandlerStruct <span class="cov8" title="1">{
+        return &amp;CSRFHandlerStruct{
+                csrflib: csrflib,
+                service: service,
+        }
+}</span>
+
+func (h *CSRFHandlerStruct) CsrfGet(c *gin.Context) <span class="cov8" title="1">{
+        secret := os.Getenv("CSRF_TOKEN")
+        token := h.service.CreateCSRFToken(h.csrflib, time.Now().Unix(), secret)
+        c.SetCookie("csrf_token", token, 3600, "/", "", false, true)
+        c.JSON(200, gin.H{
+                "csrf_token": token,
+        })
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package handler
+
+import "github.com/gin-gonic/gin"
+
+type HealthCheckHandlerInterface interface {
+        Check(c *gin.Context)
+}
+
+type HealthCheckHandler struct {
+        BaseHandler
+}
+
+func NewHealthCheckHandler() *HealthCheckHandler <span class="cov8" title="1">{
+        return &amp;HealthCheckHandler{}
+}</span>
+
+func (h *HealthCheckHandler) Check(c *gin.Context) <span class="cov8" title="1">{
+        c.JSON(200, gin.H{
+                "status": "ok",
+        })
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package middleware
+
+import "github.com/gin-gonic/gin"
+
+type Middleware struct {
+        g *gin.Engine
+}
+
+func NewMiddleware(r *gin.Engine) *Middleware <span class="cov8" title="1">{
+        return &amp;Middleware{
+                g: r,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package routing
+
+import (
+        "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/middleware"
+        "github.com/gin-gonic/gin"
+)
+
+type Routing struct {
+        gin        *gin.Engine
+        middleware *middleware.Middleware
+}
+
+func NewRouting(
+        gin *gin.Engine,
+        middleware *middleware.Middleware,
+) *Routing <span class="cov8" title="1">{
+        return &amp;Routing{
+                gin:        gin,
+                middleware: middleware,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package routing
+
+import "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/handler"
+
+func (r *Routing) CsrfRoute(
+        csrfHandler handler.CSRFHandlerInterface,
+) <span class="cov8" title="1">{
+        routerGroup := r.gin.Group("/csrf")
+        routerGroup.GET("/get", csrfHandler.CsrfGet)
+}</span>
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package routing
+
+import "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/handler"
+
+func (r *Routing) HealthCheckRoute(
+        handler handler.HealthCheckHandlerInterface,
+) <span class="cov8" title="1">{
+        r.gin.GET("/healthcheck", handler.Check)
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package service
+
+import "github.com/AtsuyaOotsuka/portfolio-go-lib/atylabcsrf"
+
+type CsrfSvcInterface interface {
+        CreateCSRFToken(
+                csrf atylabcsrf.CsrfPkgInterface,
+                timestamp int64,
+                secret string,
+        ) string
+}
+
+type CsrfSvcStruct struct{}
+
+func NewCsrfSvcStruct() CsrfSvcInterface <span class="cov8" title="1">{
+        return &amp;CsrfSvcStruct{}
+}</span>
+
+func (s *CsrfSvcStruct) CreateCSRFToken(
+        csrf atylabcsrf.CsrfPkgInterface,
+        timestamp int64,
+        secret string,
+) string <span class="cov8" title="1">{
+        nonceStr := csrf.GenerateNonceString()
+        return csrf.GenerateCSRFCookieToken(secret, timestamp, nonceStr)
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package main
+
+import (
+        "database/sql"
+        "log"
+        "os"
+
+        "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/app"
+        "github.com/AtsuyaOotsuka/portfolio-go-lib/atylabdatabase"
+        "github.com/gin-gonic/gin"
+        "github.com/joho/godotenv"
+        "gorm.io/gorm"
+)
+
+func SetupDB() (*gorm.DB, *sql.DB) <span class="cov0" title="0">{
+        db_pkg := atylabdatabase.NewDBConnect(
+                os.Getenv("DB_HOST"),
+                os.Getenv("DB_PORT"),
+                os.Getenv("DB_USER"),
+                os.Getenv("DB_PASS"),
+                os.Getenv("DB_NAME"),
+                os.Getenv("DB_TZ"),
+        )
+        db, _ := db_pkg.ConnectDB()
+
+        sqlDB, err := db.DB()
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+
+        <span class="cov0" title="0">return db, sqlDB</span>
+}
+
+func SetupRouter(db *gorm.DB, sqlDB *sql.DB) (*gin.Engine, func()) <span class="cov0" title="0">{
+        r := gin.New()
+        r.Use(gin.Recovery())
+
+        app, cleanup, _ := app.NewApp(db, sqlDB)
+
+        app.Init(r)
+
+        return r, cleanup
+}</span>
+
+func main() <span class="cov0" title="0">{
+        err := godotenv.Load()
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal("envファイルの読み込みに失敗しました。")
+        }</span>
+
+        <span class="cov0" title="0">mode := os.Getenv("GIN_MODE")
+        if mode == "" </span><span class="cov0" title="0">{
+                mode = gin.DebugMode
+        }</span>
+        <span class="cov0" title="0">gin.SetMode(mode)
+
+        db, sqlDB := SetupDB()
+        r, cleanup := SetupRouter(db, sqlDB)
+        defer cleanup()
+
+        port := os.Getenv("PORT")
+        if port == "" </span><span class="cov0" title="0">{
+                port = "8080"
+        }</span>
+        <span class="cov0" title="0">r.Run(":" + port)</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package funcs
+
+import (
+        "os"
+        "testing"
+)
+
+type Envs map[string]string
+
+func WithEnv(key, value string, t *testing.T, fn func()) <span class="cov0" title="0">{
+        original := os.Getenv(key)
+        if err := os.Setenv(key, value); err != nil </span><span class="cov0" title="0">{
+                t.Fatalf("Failed to set environment variable %s: %v", key, err)
+        }</span>
+        <span class="cov0" title="0">defer os.Setenv(key, original)
+
+        fn()</span>
+}
+
+func WithEnvMap(envs Envs, t *testing.T, fn func()) <span class="cov0" title="0">{
+        originals := make(map[string]string)
+        for key, value := range envs </span><span class="cov0" title="0">{
+                originals[key] = os.Getenv(key)
+                if err := os.Setenv(key, value); err != nil </span><span class="cov0" title="0">{
+                        t.Fatalf("Failed to set environment variable %s: %v", key, err)
+                }</span>
+        }
+
+        <span class="cov0" title="0">defer func() </span><span class="cov0" title="0">{
+                for key, original := range originals </span><span class="cov0" title="0">{
+                        os.Setenv(key, original)
+                }</span>
+        }()
+
+        <span class="cov0" title="0">fn()</span>
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package svc_mock
+
+import (
+        "github.com/AtsuyaOotsuka/portfolio-go-lib/atylabcsrf"
+        "github.com/stretchr/testify/mock"
+)
+
+type CsrfSvcMockStruct struct {
+        mock.Mock
+}
+
+func (m *CsrfSvcMockStruct) CreateCSRFToken(
+        csrf atylabcsrf.CsrfPkgInterface,
+        timestamp int64,
+        secret string,
+) string <span class="cov0" title="0">{
+        args := m.Called(csrf, timestamp, secret)
+        return args.String(0)
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
