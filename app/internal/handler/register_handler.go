@@ -36,9 +36,9 @@ func (h *RegisterHandlerStruct) Register(c *gin.Context) {
 	}
 
 	input := service.RegisterUserInput{
-		Name:         req.Name,
-		Email:        req.Email,
-		PasswordHash: req.Password,
+		Name:     req.Name,
+		Email:    req.Email,
+		Password: req.Password,
 	}
 
 	user, err := h.service.RegisterUser(input)

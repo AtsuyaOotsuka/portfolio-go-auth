@@ -16,6 +16,6 @@ type User struct {
 	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
 }
 
-func CreateUUID() string {
+func UserCreateUUID() string {
 	return uuid.New().String()
 }

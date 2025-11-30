@@ -27,3 +27,16 @@ func TestCreateCSRFToken(t *testing.T) {
 		t.Errorf("expected 'mocked_csrf_token', got '%s'", token)
 	}
 }
+
+func TestVerify(t *testing.T) {
+	csrfMock := &atylabcsrf.CsrfPkgMockStruct{}
+
+	cvs := CsrfSvcStruct{
+		csrf: csrfMock,
+	}
+
+	err := cvs.Verify("test_token", "test_secret", 1234567890)
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+}

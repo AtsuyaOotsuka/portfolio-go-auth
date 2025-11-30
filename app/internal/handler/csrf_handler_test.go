@@ -12,18 +12,18 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestNewCSRFHandler_Success(t *testing.T) {
+func TestCSRFHandler(t *testing.T) {
 
 	funcs.WithEnv("CSRF_TOKEN", "test_secret", t, func() {
 		gin.SetMode(gin.TestMode)
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
 
-		req := httptest.NewRequest("POST", "/", nil)
+		req := httptest.NewRequest("GET", "/", nil)
 		req.Header.Set("Content-Type", "application/json")
 		c.Request = req
 
-		csrfSvcMock := &svc_mock.CsrfSvcMockStruct{}
+		csrfSvcMock := new(svc_mock.CsrfSvcMockStruct)
 		csrfSvcMock.On(
 			"CreateCSRFToken",
 			mock.AnythingOfType("int64"),

@@ -61,13 +61,13 @@
 				
 				<option value="file2">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/handler/healthcheck_handler.go (100.0%)</option>
 				
-				<option value="file3">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/handler/register_handler.go (0.0%)</option>
+				<option value="file3">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/handler/register_handler.go (100.0%)</option>
 				
 				<option value="file4">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/middleware/base_mw.go (100.0%)</option>
 				
-				<option value="file5">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/middleware/csrf_mw.go (10.5%)</option>
+				<option value="file5">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/middleware/csrf_mw.go (100.0%)</option>
 				
-				<option value="file6">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/models/user.go (0.0%)</option>
+				<option value="file6">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/models/user.go (100.0%)</option>
 				
 				<option value="file7">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing/base_routing.go (100.0%)</option>
 				
@@ -75,19 +75,27 @@
 				
 				<option value="file9">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing/healthcheck_routing.go (100.0%)</option>
 				
-				<option value="file10">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing/register_routing.go (0.0%)</option>
+				<option value="file10">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing/register_routing.go (100.0%)</option>
 				
-				<option value="file11">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service/csrf_svc.go (75.0%)</option>
+				<option value="file11">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service/csrf_svc.go (100.0%)</option>
 				
-				<option value="file12">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service/user_register_svc.go (0.0%)</option>
+				<option value="file12">github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service/user_register_svc.go (100.0%)</option>
 				
 				<option value="file13">github.com/AtsuyaOotsuka/portfolio-go-auth/main.go (0.0%)</option>
 				
 				<option value="file14">github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabencrypt/encrypt.go (0.0%)</option>
 				
-				<option value="file15">github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/funcs/env_helper.go (0.0%)</option>
+				<option value="file15">github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabencrypt/encrypt_mock.go (0.0%)</option>
 				
-				<option value="file16">github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/mocks/svc_mock/csrf_svc_mock.go (0.0%)</option>
+				<option value="file16">github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/funcs/env_helper.go (0.0%)</option>
+				
+				<option value="file17">github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/funcs/routing_helper.go (0.0%)</option>
+				
+				<option value="file18">github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/mocks/global_mock/db_mock.go (0.0%)</option>
+				
+				<option value="file19">github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/mocks/svc_mock/csrf_svc_mock.go (0.0%)</option>
+				
+				<option value="file20">github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/mocks/svc_mock/user_register_svc_mock.go (0.0%)</option>
 				
 				</select>
 			</div>
@@ -254,7 +262,7 @@ type RegisterHandlerStruct struct {
 
 func NewRegisterHandler(
         service service.UserRegisterSvcInterface,
-) *RegisterHandlerStruct <span class="cov0" title="0">{
+) *RegisterHandlerStruct <span class="cov8" title="1">{
         return &amp;RegisterHandlerStruct{
                 service: service,
         }
@@ -266,26 +274,26 @@ type registerRequest struct {
         Password string `form:"password" json:"password" binding:"required,min=8"`
 }
 
-func (h *RegisterHandlerStruct) Register(c *gin.Context) <span class="cov0" title="0">{
+func (h *RegisterHandlerStruct) Register(c *gin.Context) <span class="cov8" title="1">{
         var req registerRequest
-        if err := c.ShouldBind(&amp;req); err != nil </span><span class="cov0" title="0">{
+        if err := c.ShouldBind(&amp;req); err != nil </span><span class="cov8" title="1">{
                 c.JSON(400, gin.H{"error": err.Error()})
                 return
         }</span>
 
-        <span class="cov0" title="0">input := service.RegisterUserInput{
-                Name:         req.Name,
-                Email:        req.Email,
-                PasswordHash: req.Password,
+        <span class="cov8" title="1">input := service.RegisterUserInput{
+                Name:     req.Name,
+                Email:    req.Email,
+                Password: req.Password,
         }
 
         user, err := h.service.RegisterUser(input)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 c.JSON(500, gin.H{"error": err.Error()})
                 return
         }</span>
 
-        <span class="cov0" title="0">c.JSON(200, gin.H{
+        <span class="cov8" title="1">c.JSON(200, gin.H{
                 "uuid":     user.UUID,
                 "username": user.Username,
                 "email":    user.Email,
@@ -350,34 +358,34 @@ func NewCSRFMiddleware(
 }</span>
 
 func (m *CSRFMiddleware) Handler() gin.HandlerFunc <span class="cov8" title="1">{
-        return func(c *gin.Context) </span><span class="cov0" title="0">{
-                if c.Request.Method == http.MethodGet || c.Request.Method == http.MethodHead </span><span class="cov0" title="0">{
+        return func(c *gin.Context) </span><span class="cov8" title="1">{
+                if c.Request.Method == http.MethodGet || c.Request.Method == http.MethodHead </span><span class="cov8" title="1">{
                         c.Next()
                         return
                 }</span>
-                <span class="cov0" title="0">token := c.GetHeader("X-CSRF-Token")
-                if token == "" </span><span class="cov0" title="0">{
+                <span class="cov8" title="1">token := c.GetHeader("X-CSRF-Token")
+                if token == "" </span><span class="cov8" title="1">{
                         token = c.PostForm("_token")
                 }</span>
-                <span class="cov0" title="0">if token == "" </span><span class="cov0" title="0">{
+                <span class="cov8" title="1">if token == "" </span><span class="cov8" title="1">{
                         cookie, err := c.Cookie("csrf_token")
-                        if err == nil </span><span class="cov0" title="0">{
+                        if err == nil </span><span class="cov8" title="1">{
                                 token = cookie
                         }</span>
                 }
-                <span class="cov0" title="0">if token == "" </span><span class="cov0" title="0">{
+                <span class="cov8" title="1">if token == "" </span><span class="cov8" title="1">{
                         c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "not set csrf token"})
                         return
                 }</span>
-                <span class="cov0" title="0">if err := m.csrf.Verify(
+                <span class="cov8" title="1">if err := m.csrf.Verify(
                         token,
                         os.Getenv("CSRF_TOKEN"),
                         time.Now().Unix(),
-                ); err != nil </span><span class="cov0" title="0">{
+                ); err != nil </span><span class="cov8" title="1">{
                         c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "invalid csrf token"})
                         return
                 }</span>
-                <span class="cov0" title="0">c.Next()</span>
+                <span class="cov8" title="1">c.Next()</span>
         }
 }
 </pre>
@@ -400,7 +408,7 @@ type User struct {
         UpdatedAt    time.Time `gorm:"autoUpdateTime"`
 }
 
-func CreateUUID() string <span class="cov0" title="0">{
+func UserCreateUUID() string <span class="cov8" title="1">{
         return uuid.New().String()
 }</span>
 </pre>
@@ -457,7 +465,7 @@ import "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/handler"
 
 func (r *Routing) RegisterRouting(
         registerHandler handler.RegisterHandlerInterface,
-) <span class="cov0" title="0">{
+) <span class="cov8" title="1">{
         r.gin.POST("/register", registerHandler.Register)
 }</span>
 </pre>
@@ -495,7 +503,7 @@ func (s *CsrfSvcStruct) Verify(
         token string,
         secret string,
         timestamp int64,
-) error <span class="cov0" title="0">{
+) error <span class="cov8" title="1">{
         return s.csrf.ValidateCSRFCookieToken(token, secret, timestamp)
 }</span>
 </pre>
@@ -522,7 +530,7 @@ type UserRegisterSvcStruct struct {
 func NewUserRegisterSvc(
         db *gorm.DB,
         encryptlib atylabencrypt.EncryptPkgInterface,
-) *UserRegisterSvcStruct <span class="cov0" title="0">{
+) *UserRegisterSvcStruct <span class="cov8" title="1">{
         return &amp;UserRegisterSvcStruct{
                 db:         db,
                 encryptlib: encryptlib,
@@ -530,32 +538,32 @@ func NewUserRegisterSvc(
 }</span>
 
 type RegisterUserInput struct {
-        Name         string
-        Email        string
-        PasswordHash string
+        Name     string
+        Email    string
+        Password string
 }
 
 func (s *UserRegisterSvcStruct) RegisterUser(
         input RegisterUserInput,
-) (models.User, error) <span class="cov0" title="0">{
+) (models.User, error) <span class="cov8" title="1">{
         email := strings.TrimSpace(strings.ToLower(input.Email))
-        hashedPassword, err := s.encryptlib.CreatePasswordHash(input.PasswordHash)
-        if err != nil </span><span class="cov0" title="0">{
+        hashedPassword, err := s.encryptlib.CreatePasswordHash(input.Password)
+        if err != nil </span><span class="cov8" title="1">{
                 return models.User{}, err
         }</span>
 
-        <span class="cov0" title="0">user := models.User{
-                UUID:         models.CreateUUID(),
+        <span class="cov8" title="1">user := models.User{
+                UUID:         models.UserCreateUUID(),
                 Username:     input.Name,
                 Email:        email,
                 PasswordHash: hashedPassword,
         }
 
-        if err := s.db.Create(&amp;user).Error; err != nil </span><span class="cov0" title="0">{
+        if err := s.db.Create(&amp;user).Error; err != nil </span><span class="cov8" title="1">{
                 return models.User{}, err
         }</span>
 
-        <span class="cov0" title="0">return user, nil</span>
+        <span class="cov8" title="1">return user, nil</span>
 }
 </pre>
 		
@@ -650,7 +658,21 @@ func (e *EncryptPkgStruct) CreatePasswordHash(password string) (string, error) <
 }
 </pre>
 		
-		<pre class="file" id="file15" style="display: none">package funcs
+		<pre class="file" id="file15" style="display: none">package atylabencrypt
+
+import "github.com/stretchr/testify/mock"
+
+type EncryptPkgStructMock struct {
+        mock.Mock
+}
+
+func (e *EncryptPkgStructMock) CreatePasswordHash(password string) (string, error) <span class="cov0" title="0">{
+        args := e.Called(password)
+        return args.String(0), args.Error(1)
+}</span>
+</pre>
+		
+		<pre class="file" id="file16" style="display: none">package funcs
 
 import (
         "os"
@@ -688,7 +710,83 @@ func WithEnvMap(envs Envs, t *testing.T, fn func()) <span class="cov0" title="0"
 }
 </pre>
 		
-		<pre class="file" id="file16" style="display: none">package svc_mock
+		<pre class="file" id="file17" style="display: none">package funcs
+
+import (
+        "github.com/gin-gonic/gin"
+        "github.com/stretchr/testify/assert"
+)
+
+type ExpectedRoute struct {
+        Path   string
+        Method string
+}
+
+func EachExepectedRoute(
+        expected []ExpectedRoute,
+        g *gin.Engine,
+        t assert.TestingT,
+) <span class="cov0" title="0">{
+        for _, er := range expected </span><span class="cov0" title="0">{
+                found := false
+                for _, route := range g.Routes() </span><span class="cov0" title="0">{
+                        if route.Path == er.Path &amp;&amp; route.Method == er.Method </span><span class="cov0" title="0">{
+                                found = true
+                                break</span>
+                        }
+                }
+                <span class="cov0" title="0">assert.True(t, found, "Expected route %s [%s] to be registered", er.Path, er.Method)</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file18" style="display: none">package global_mock
+
+import (
+        "testing"
+
+        "github.com/DATA-DOG/go-sqlmock"
+        "github.com/stretchr/testify/require"
+        "gorm.io/driver/mysql"
+        "gorm.io/gorm"
+        "gorm.io/gorm/logger"
+)
+
+func NewGormWithMock(t *testing.T) (*gorm.DB, sqlmock.Sqlmock, func()) <span class="cov0" title="0">{
+        t.Helper()
+        sqlDB, mock, err := sqlmock.New()
+        if err != nil </span><span class="cov0" title="0">{
+                t.Fatal(err)
+        }</span>
+        <span class="cov0" title="0">gdb, err := gorm.Open(mysql.New(mysql.Config{
+                Conn:                      sqlDB,
+                SkipInitializeWithVersion: true,
+        }), &amp;gorm.Config{
+                Logger: logger.Default.LogMode(logger.Info), // ← ここ！
+
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                t.Fatal(err)
+        }</span>
+        <span class="cov0" title="0">return gdb, mock, func() </span><span class="cov0" title="0">{ sqlDB.Close() }</span>
+}
+
+func NewGormWithMockError(t *testing.T) (*gorm.DB, sqlmock.Sqlmock, func()) <span class="cov0" title="0">{
+        t.Helper()
+        sqlDB, mock, err := sqlmock.New()
+        if err != nil </span><span class="cov0" title="0">{
+                t.Fatal(err)
+        }</span>
+        <span class="cov0" title="0">gdb, err := gorm.Open(mysql.New(mysql.Config{
+                Conn:                      sqlDB,
+                SkipInitializeWithVersion: true,
+        }), &amp;gorm.Config{})
+        require.NoError(t, err)
+        return gdb, mock, func() </span><span class="cov0" title="0">{ sqlDB.Close() }</span>
+}
+</pre>
+		
+		<pre class="file" id="file19" style="display: none">package svc_mock
 
 import (
         "github.com/stretchr/testify/mock"
@@ -713,6 +811,26 @@ func (m *CsrfSvcMockStruct) Verify(
 ) error <span class="cov0" title="0">{
         args := m.Called(token, secret, timestamp)
         return args.Error(0)
+}</span>
+</pre>
+		
+		<pre class="file" id="file20" style="display: none">package svc_mock
+
+import (
+        "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/models"
+        "github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service"
+        "github.com/stretchr/testify/mock"
+)
+
+type UserRegisterSvcStructMock struct {
+        mock.Mock
+}
+
+func (m *UserRegisterSvcStructMock) RegisterUser(
+        input service.RegisterUserInput,
+) (models.User, error) <span class="cov0" title="0">{
+        args := m.Called(input)
+        return args.Get(0).(models.User), args.Error(1)
 }</span>
 </pre>
 		

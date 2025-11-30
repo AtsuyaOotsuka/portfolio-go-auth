@@ -28,22 +28,22 @@ func NewUserRegisterSvc(
 }
 
 type RegisterUserInput struct {
-	Name         string
-	Email        string
-	PasswordHash string
+	Name     string
+	Email    string
+	Password string
 }
 
 func (s *UserRegisterSvcStruct) RegisterUser(
 	input RegisterUserInput,
 ) (models.User, error) {
 	email := strings.TrimSpace(strings.ToLower(input.Email))
-	hashedPassword, err := s.encryptlib.CreatePasswordHash(input.PasswordHash)
+	hashedPassword, err := s.encryptlib.CreatePasswordHash(input.Password)
 	if err != nil {
 		return models.User{}, err
 	}
 
 	user := models.User{
-		UUID:         models.CreateUUID(),
+		UUID:         models.UserCreateUUID(),
 		Username:     input.Name,
 		Email:        email,
 		PasswordHash: hashedPassword,
