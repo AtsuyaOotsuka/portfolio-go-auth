@@ -5,9 +5,11 @@ import (
 
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/handler"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/middleware"
+	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/repositories"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabencrypt"
+	"github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabjwt"
 	"github.com/AtsuyaOotsuka/portfolio-go-lib/atylabcsrf"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -48,17 +50,29 @@ func (a *App) initRoutes() {
 	// ルーティングの初期化
 	routing := routing.NewRouting(a.gin, a.middleware)
 	routing.HealthCheckRoute(handler.NewHealthCheckHandler())
-	routing.CsrfRoute(handler.NewCSRFHandler(
-		service.NewCsrfSvcStruct(
-			atylabcsrf.NewCsrfPkgStruct(),
+	routing.CsrfRoute(
+		handler.NewCSRFHandler(
+			service.NewCsrfSvcStruct(
+				atylabcsrf.NewCsrfPkgStruct(),
+			),
 		),
-	))
+	)
 	routing.RegisterRouting(
 		handler.NewRegisterHandler(
 			service.NewUserRegisterSvc(
 				a.db,
 				atylabencrypt.NewEncryptPkg(),
 			),
+		),
+	)
+	routing.AuthRouting(
+		handler.NewAuthHandler(
+			service.NewAuthSvc(
+				repositories.NewUserRepo(a.db),
+				repositories.NewUserRefreshTokenRepo(a.db),
+				atylabjwt.NewJwtSvc(),
+			),
+			repositories.NewUserRepo(a.db),
 		),
 	)
 }
