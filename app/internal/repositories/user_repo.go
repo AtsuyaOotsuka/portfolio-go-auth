@@ -10,7 +10,6 @@ import (
 
 type UserRepoInterface interface {
 	GetByEmail(email string) (*models.User, error)
-	GetByRefreshToken(refreshToken string) (*models.User, error)
 }
 
 type UserRepoStruct struct {
@@ -32,18 +31,6 @@ func (r *UserRepoStruct) GetByEmail(email string) (*models.User, error) {
 			return nil, fmt.Errorf("user not found")
 		}
 		return nil, fmt.Errorf("failed to get user by email: %w", err)
-	}
-
-	return &user, nil
-}
-
-func (r *UserRepoStruct) GetByRefreshToken(refreshToken string) (*models.User, error) {
-	var user models.User
-	if err := r.db.Where("refresh_token = ?", refreshToken).First(&user).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("user not found")
-		}
-		return nil, fmt.Errorf("failed to get user by refresh token: %w", err)
 	}
 
 	return &user, nil

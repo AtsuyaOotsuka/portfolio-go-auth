@@ -18,10 +18,7 @@ type UserRefreshToken struct {
 }
 
 func CreateRefreshToken() string {
-	bytes := make([]byte, 256)
-	_, err := rand.Read(bytes)
-	if err != nil {
-		return ""
-	}
+	bytes := make([]byte, 64)
+	rand.Read(bytes)
 	return hex.EncodeToString(bytes)
 }

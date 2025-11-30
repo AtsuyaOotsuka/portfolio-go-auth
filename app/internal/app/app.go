@@ -8,6 +8,7 @@ import (
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/repositories"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/routing"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service"
+	"github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabclock"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabencrypt"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabjwt"
 	"github.com/AtsuyaOotsuka/portfolio-go-lib/atylabcsrf"
@@ -71,8 +72,8 @@ func (a *App) initRoutes() {
 				repositories.NewUserRepo(a.db),
 				repositories.NewUserRefreshTokenRepo(a.db),
 				atylabjwt.NewJwtSvc(),
+				atylabclock.NewClock(),
 			),
-			repositories.NewUserRepo(a.db),
 		),
 	)
 }

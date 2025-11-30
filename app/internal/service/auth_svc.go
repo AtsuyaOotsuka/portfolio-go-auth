@@ -8,6 +8,7 @@ import (
 
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/models"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/repositories"
+	"github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabclock"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabjwt"
 )
 
@@ -20,17 +21,20 @@ type AuthSvcStruct struct {
 	userRepo             repositories.UserRepoInterface
 	userRefreshTokenRepo repositories.UserRefreshTokenRepoInterface
 	jwtlib               atylabjwt.JwtSvcInterface
+	clock                atylabclock.ClockInterface
 }
 
 func NewAuthSvc(
 	userRepo repositories.UserRepoInterface,
 	userRefreshTokenRepo repositories.UserRefreshTokenRepoInterface,
 	jwtlib atylabjwt.JwtSvcInterface,
+	clock atylabclock.ClockInterface,
 ) *AuthSvcStruct {
 	return &AuthSvcStruct{
 		userRepo:             userRepo,
 		userRefreshTokenRepo: userRefreshTokenRepo,
 		jwtlib:               jwtlib,
+		clock:                clock,
 	}
 }
 
@@ -66,7 +70,7 @@ func (s *AuthSvcStruct) createResponseToken(user *models.User) (*AuthOutput, err
 		Key:   []byte(os.Getenv("JWT_SECRET_KEY")),
 		Uuid:  user.UUID,
 		Email: user.Email,
-		Exp:   time.Now().Add(time.Hour * 1),
+		Exp:   s.clock.Now().Add(time.Hour * 1),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create jwt: %w", err)

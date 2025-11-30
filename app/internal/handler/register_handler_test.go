@@ -9,6 +9,7 @@ import (
 
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/models"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service"
+	"github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/funcs"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/mocks/svc_mock"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -100,67 +101,45 @@ func TestRegisterFailRegisterUser(t *testing.T) {
 }
 
 func TestRegisterFailedValidation(t *testing.T) {
-	expected := map[string]any{
-		"required_name": map[string]string{
-			"key":   "name",
-			"error": "required",
+	expected := []*funcs.ValidationSetting{
+		{
+			Title:     "Name is required",
+			Key:       "name",
+			ErrorType: "required",
 		},
-		"required_email": map[string]string{
-			"key":   "email",
-			"error": "required",
+		{
+			Title:     "Email is required",
+			Key:       "email",
+			ErrorType: "required",
 		},
-		"invalid_email": map[string]string{
-			"key":   "email",
-			"error": "email",
+		{
+			Title:     "Email is invalid",
+			Key:       "email",
+			ErrorType: "email",
 		},
-		"required_password": map[string]string{
-			"key":   "password",
-			"error": "required",
+		{
+			Title:     "Password is required",
+			Key:       "password",
+			ErrorType: "required",
 		},
-		"short_password": map[string]string{
-			"key":   "password",
-			"error": "min",
+		{
+			Title:     "Password is too short",
+			Key:       "password",
+			ErrorType: "min",
 		},
 	}
 
-	for name, exp := range expected {
-		t.Run(name, func(t *testing.T) {
+	for _, exp := range expected {
+		t.Run(exp.Title, func(t *testing.T) {
 			gin.SetMode(gin.TestMode)
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
 
-			name := func() string {
-				if val, ok := exp.(map[string]string); ok && val["key"] == "name" {
-					if val["error"] == "required" {
-						return ""
-					}
-				}
-				return "Test User"
-			}()
+			name := funcs.CreateValidationTestDataName(exp)
 
-			email := func() string {
-				if val, ok := exp.(map[string]string); ok && val["key"] == "email" {
-					if val["error"] == "required" {
-						return ""
-					}
-					if val["error"] == "email" {
-						return "invalid-email"
-					}
-				}
-				return "testuser@example.com"
-			}()
+			email := funcs.CreateValidationTestDataEmail(exp)
 
-			password := func() string {
-				if val, ok := exp.(map[string]string); ok && val["key"] == "password" {
-					if val["error"] == "required" {
-						return ""
-					}
-					if val["error"] == "min" {
-						return "short"
-					}
-				}
-				return "securepassword"
-			}()
+			password := funcs.CreateValidationTestDataPassword(exp)
 
 			body := map[string]string{
 				"name":     name,

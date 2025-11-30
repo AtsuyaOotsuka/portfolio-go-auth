@@ -81,9 +81,15 @@ func (r *UserRefreshTokenRepoStruct) ChangeUsed(refreshToken string, ipAddress s
 	if err != nil {
 		return err
 	}
-	userRefreshToken.IsUsed = true
-	userRefreshToken.UseIP = ipAddress
-	if err := r.db.Save(&userRefreshToken).Error; err != nil {
+
+	updates := map[string]any{
+		"is_used": true,
+		"use_ip":  ipAddress,
+	}
+
+	if err := r.db.Model(&models.UserRefreshToken{}).
+		Where("id = ?", userRefreshToken.ID).
+		Updates(updates).Error; err != nil {
 		return fmt.Errorf("failed to update refresh token: %w", err)
 	}
 

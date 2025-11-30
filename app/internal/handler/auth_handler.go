@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 
-	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/repositories"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -16,16 +15,13 @@ type AuthHandlerInterface interface {
 type AuthHandlerStruct struct {
 	BaseHandler
 	service service.AuthSvcInterface
-	repo    repositories.UserRepoInterface
 }
 
 func NewAuthHandler(
 	service service.AuthSvcInterface,
-	repo repositories.UserRepoInterface,
 ) *AuthHandlerStruct {
 	return &AuthHandlerStruct{
 		service: service,
-		repo:    repo,
 	}
 }
 
