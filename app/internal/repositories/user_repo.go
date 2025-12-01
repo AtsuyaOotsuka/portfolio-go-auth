@@ -9,6 +9,7 @@ import (
 )
 
 type UserRepoInterface interface {
+	Create(user *models.User) error
 	GetByEmail(email string) (*models.User, error)
 }
 
@@ -22,6 +23,16 @@ func NewUserRepo(
 	return &UserRepoStruct{
 		db: db,
 	}
+}
+
+func (r *UserRepoStruct) Create(user *models.User) error {
+	UUID := models.UserCreateUUID()
+	user.UUID = UUID
+
+	if err := r.db.Create(user).Error; err != nil {
+		return fmt.Errorf("failed to create user: %w", err)
+	}
+	return nil
 }
 
 func (r *UserRepoStruct) GetByEmail(email string) (*models.User, error) {

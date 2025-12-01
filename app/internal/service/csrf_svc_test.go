@@ -8,9 +8,8 @@ import (
 
 func TestNewCsrfSvcStruct(t *testing.T) {
 	svc := NewCsrfSvcStruct(&atylabcsrf.CsrfPkgMockStruct{})
-	_, ok := svc.(*CsrfSvcStruct)
-	if !ok {
-		t.Errorf("expected type *CsrfSvcStruct, got %T", svc)
+	if svc == nil {
+		t.Error("expected non-nil CsrfSvcStruct")
 	}
 }
 

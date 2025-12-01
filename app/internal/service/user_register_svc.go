@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/models"
-	"github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabencrypt"
-	"gorm.io/gorm"
+	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/repositories"
+	"github.com/AtsuyaOotsuka/portfolio-go-lib/atylabencrypt"
 )
 
 type UserRegisterSvcInterface interface {
@@ -13,17 +13,17 @@ type UserRegisterSvcInterface interface {
 }
 
 type UserRegisterSvcStruct struct {
-	db         *gorm.DB
 	encryptlib atylabencrypt.EncryptPkgInterface
+	userRepo   repositories.UserRepoInterface
 }
 
 func NewUserRegisterSvc(
-	db *gorm.DB,
 	encryptlib atylabencrypt.EncryptPkgInterface,
+	userRepo repositories.UserRepoInterface,
 ) *UserRegisterSvcStruct {
 	return &UserRegisterSvcStruct{
-		db:         db,
 		encryptlib: encryptlib,
+		userRepo:   userRepo,
 	}
 }
 
@@ -43,13 +43,12 @@ func (s *UserRegisterSvcStruct) RegisterUser(
 	}
 
 	user := models.User{
-		UUID:         models.UserCreateUUID(),
 		Username:     input.Name,
 		Email:        email,
 		PasswordHash: hashedPassword,
 	}
 
-	if err := s.db.Create(&user).Error; err != nil {
+	if err := s.userRepo.Create(&user); err != nil {
 		return models.User{}, err
 	}
 

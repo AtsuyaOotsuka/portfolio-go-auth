@@ -5,21 +5,11 @@ import (
 	"testing"
 
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/models"
-	"github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabencrypt"
-	"github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/mocks/global_mock"
-	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/mocks/repo_mock"
+	"github.com/AtsuyaOotsuka/portfolio-go-lib/atylabencrypt"
 )
 
 func TestRegisterUserSuccess(t *testing.T) {
-	gdb, mock, cleanup := global_mock.NewGormWithMock(t)
-
-	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO .*users.*").
-		WillReturnResult(sqlmock.NewResult(1, 1))
-
-	defer cleanup()
-	mock.ExpectCommit()
-
 	input := RegisterUserInput{
 		Name:     "testuser",
 		Email:    "testuser@example.com",
@@ -30,7 +20,14 @@ func TestRegisterUserSuccess(t *testing.T) {
 	encryptlibMock.On("CreatePasswordHash", input.Password).
 		Return("hashedpassword123", nil)
 
-	svc := NewUserRegisterSvc(gdb, encryptlibMock)
+	userRepoMock := new(repo_mock.UserRepoMock)
+	userRepoMock.On("Create", &models.User{
+		Username:     input.Name,
+		Email:        input.Email,
+		PasswordHash: "hashedpassword123",
+	}).Return(nil)
+
+	svc := NewUserRegisterSvc(encryptlibMock, userRepoMock)
 
 	user, err := svc.RegisterUser(input)
 	if err != nil {
@@ -50,9 +47,6 @@ func TestRegisterUserSuccess(t *testing.T) {
 }
 
 func TestRegisterUserCreatePasswordHashError(t *testing.T) {
-	gdb, _, cleanup := global_mock.NewGormWithMockError(t)
-	defer cleanup()
-
 	input := RegisterUserInput{
 		Name:     "testuser",
 		Email:    "testuser@example.com",
@@ -63,7 +57,9 @@ func TestRegisterUserCreatePasswordHashError(t *testing.T) {
 	encryptlibMock.On("CreatePasswordHash", input.Password).
 		Return("", fmt.Errorf("hash error"))
 
-	svc := NewUserRegisterSvc(gdb, encryptlibMock)
+	userRepoMock := new(repo_mock.UserRepoMock)
+
+	svc := NewUserRegisterSvc(encryptlibMock, userRepoMock)
 
 	user, err := svc.RegisterUser(input)
 	if err == nil {
@@ -78,9 +74,6 @@ func TestRegisterUserCreatePasswordHashError(t *testing.T) {
 }
 
 func TestRegisterUserDBCreateError(t *testing.T) {
-	gdb, mock, cleanup := global_mock.NewGormWithMock(t)
-	defer cleanup()
-
 	input := RegisterUserInput{
 		Name:     "testuser",
 		Email:    "testuser@example.com",
@@ -91,12 +84,14 @@ func TestRegisterUserDBCreateError(t *testing.T) {
 	encryptlibMock.On("CreatePasswordHash", input.Password).
 		Return("hashedpassword123", nil)
 
-	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO .*users.*").
-		WillReturnError(fmt.Errorf("db create error"))
-	mock.ExpectRollback()
+	userRepoMock := new(repo_mock.UserRepoMock)
+	userRepoMock.On("Create", &models.User{
+		Username:     input.Name,
+		Email:        input.Email,
+		PasswordHash: "hashedpassword123",
+	}).Return(fmt.Errorf("db create error"))
 
-	svc := NewUserRegisterSvc(gdb, encryptlibMock)
+	svc := NewUserRegisterSvc(encryptlibMock, userRepoMock)
 
 	user, err := svc.RegisterUser(input)
 	if err == nil {

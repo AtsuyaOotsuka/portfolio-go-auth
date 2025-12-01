@@ -8,8 +8,8 @@ import (
 
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/models"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/repositories"
-	"github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabclock"
-	"github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabjwt"
+	"github.com/AtsuyaOotsuka/portfolio-go-lib/atylabclock"
+	"github.com/AtsuyaOotsuka/portfolio-go-lib/atylabjwt"
 )
 
 type AuthSvcInterface interface {

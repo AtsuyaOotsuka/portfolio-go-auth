@@ -3,7 +3,7 @@ package models
 import (
 	"testing"
 
-	"github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabencrypt"
+	"github.com/AtsuyaOotsuka/portfolio-go-lib/atylabencrypt"
 )
 
 func TestCreateUUID(t *testing.T) {

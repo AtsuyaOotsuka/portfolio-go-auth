@@ -9,6 +9,46 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 )
 
+func TestCreate(t *testing.T) {
+	user := &models.User{
+		PasswordHash: "hashed_password",
+		Email:        "example@example.com",
+	}
+
+	gdb, mock, cleanup := global_mock.NewGormWithMock(t)
+	mock.ExpectBegin()
+	mock.ExpectExec("INSERT INTO .*users.*").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	defer cleanup()
+	mock.ExpectCommit()
+
+	repo := NewUserRepo(gdb)
+	if err := repo.Create(user); err != nil {
+		t.Fatalf("expected no error, but got %v", err)
+	}
+}
+
+func TestCreateFailDbErr(t *testing.T) {
+	user := &models.User{
+		PasswordHash: "hashed_password",
+		Email:        "example@example.com",
+	}
+
+	gdb, mock, cleanup := global_mock.NewGormWithMock(t)
+	mock.ExpectBegin()
+	mock.ExpectExec("INSERT INTO .*users.*").
+		WillReturnError(sql.ErrConnDone)
+
+	defer cleanup()
+	mock.ExpectRollback()
+
+	repo := NewUserRepo(gdb)
+	if err := repo.Create(user); err == nil {
+		t.Fatalf("expected error, but got none")
+	}
+}
+
 func TestUserRepoGetByEmail(t *testing.T) {
 	user := &models.User{
 		PasswordHash: "hashed_password",

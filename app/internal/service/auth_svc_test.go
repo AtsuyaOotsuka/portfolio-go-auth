@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/models"
-	"github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabclock"
-	"github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabencrypt"
-	"github.com/AtsuyaOotsuka/portfolio-go-auth/public_lib/atylabjwt"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/funcs"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/mocks/repo_mock"
+	"github.com/AtsuyaOotsuka/portfolio-go-lib/atylabclock"
+	"github.com/AtsuyaOotsuka/portfolio-go-lib/atylabencrypt"
+	"github.com/AtsuyaOotsuka/portfolio-go-lib/atylabjwt"
 )
 
 func TestLoginSuccess(t *testing.T) {

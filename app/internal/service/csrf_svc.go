@@ -13,7 +13,7 @@ type CsrfSvcStruct struct {
 
 func NewCsrfSvcStruct(
 	csrf atylabcsrf.CsrfPkgInterface,
-) CsrfSvcInterface {
+) *CsrfSvcStruct {
 	return &CsrfSvcStruct{
 		csrf: csrf,
 	}
