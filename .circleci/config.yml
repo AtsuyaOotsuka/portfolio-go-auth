@@ -1,0 +1,50 @@
+version: 2.1
+
+executors:
+  golang:
+    docker:
+      - image: cimg/go:1.24
+        environment:
+          CSRF_TOKEN: 1234567890abcdef
+          JWT_SECRET: AAAABBBBCCCCDDDD
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: testuser
+          DB_PASS: testpassword
+          DB_NAME: local_dev_test_db
+          DB_TZ: Asia/Tokyo
+      - image: cimg/mysql:8.0
+        environment:
+          MYSQL_ROOT_PASSWORD: example
+          MYSQL_DATABASE: local_dev_test_db
+          MYSQL_USER: testuser
+          MYSQL_PASSWORD: testpassword
+  
+commands:
+  run_mysql:
+    steps:
+      - run:
+          name: Wait for MySQL
+          command: dockerize -wait tcp://localhost:3306 -timeout 1m
+
+  run_tests_auth:
+    steps:
+      - run:
+          name: Run Auth Service Tests
+          command: |
+            cd ./app
+            go test -v -cover ./...
+
+jobs:
+  test:
+    executor: golang
+    steps:
+      - checkout
+      - run_mysql
+      - run_tests_auth
+
+workflows:
+  version: 2
+  test_and_build:
+    jobs:
+      - test
