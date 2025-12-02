@@ -6,7 +6,7 @@ executors:
       - image: cimg/go:1.24
         environment:
           CSRF_TOKEN: 1234567890abcdef
-          JWT_SECRET: AAAABBBBCCCCDDDD
+          JWT_SECRET_KEY: AAAABBBBCCCCDDDD
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
           DB_USER: testuser
@@ -27,6 +27,20 @@ commands:
           name: Wait for MySQL
           command: dockerize -wait tcp://localhost:3306 -timeout 1m
 
+  run_migrate:
+    steps:
+      - run:
+          name: Install migrate CLI
+          command: |
+            curl -L https://github.com/golang-migrate/migrate/releases/download/v4.16.2/migrate.linux-amd64.tar.gz | tar -xz
+            sudo mv migrate /usr/local/bin/migrate
+
+      - run:
+          name: Run Migrations
+          command: |
+            migrate -path ./migrations -database "mysql://testuser:testpassword@tcp(127.0.0.1:3306)/local_dev_test_db?multiStatements=true" up
+
+
   run_tests_auth:
     steps:
       - run:
@@ -41,6 +55,7 @@ jobs:
     steps:
       - checkout
       - run_mysql
+      - run_migrate
       - run_tests_auth
 
 workflows:

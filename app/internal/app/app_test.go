@@ -6,20 +6,19 @@ import (
 	"testing"
 
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/app"
+	"github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/mocks/global_mock"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-func newTestDB(t *testing.T) *gorm.DB {
+func newTestDB(t *testing.T) (*gorm.DB, func()) {
 	t.Helper()
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
-	if err != nil {
-		t.Fatal(err)
-	}
+
+	db, _, cleanup := global_mock.NewGormWithMock(t)
+
 	// 必要なら  AutoMigrate(&models.User{})
-	return db
+	return db, cleanup
 }
 
 func TestNewAppAndInitRoutes(t *testing.T) {
@@ -27,7 +26,8 @@ func TestNewAppAndInitRoutes(t *testing.T) {
 	r := gin.Default()
 
 	// App生成とルート初期化
-	db := newTestDB(t) // ← 本物の *gorm.DB
+	db, cleanup := newTestDB(t)
+	defer cleanup()
 	sqlDB, _ := db.DB()
 	a, cleanup, err := app.NewApp(db, sqlDB) // ← これで db.DB() もOK
 	if err != nil {
