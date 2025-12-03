@@ -7,14 +7,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/AtsuyaOotsuka/portfolio-go-auth/internal/repositories"
 	"github.com/AtsuyaOotsuka/portfolio-go-auth/test_helper/funcs"
+	"github.com/AtsuyaOotsuka/portfolio-go-lib/atylabcsrf"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -176,7 +180,6 @@ func TestRefresh(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.NotEmpty(t, respData)
-	fmt.Println("access_token", respData["access_token"])
 
 	jwt := respData["access_token"].(string)
 	jwtInfo, err := funcs.JwtConvert(jwt)
@@ -187,4 +190,88 @@ func TestRefresh(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("user%s", uuid), jwtInfo.Uuid)
 	assert.Equal(t, email, jwtInfo.Email)
 
+}
+
+func TestRegister(t *testing.T) {
+	body := map[string]string{
+		"name":     "newuser",
+		"email":    "newuser@example.com",
+		"password": "newpassword123",
+	}
+	jsonBody, _ := json.Marshal(body)
+	reqBody := strings.NewReader(string(jsonBody))
+
+	resp, close := request("POST", "/register", reqBody, t)
+	defer close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	var respData map[string]interface{}
+	err = json.Unmarshal(bodyBytes, &respData)
+	assert.NoError(t, err)
+
+	assert.NotEmpty(t, respData)
+	assert.Equal(t, "newuser", respData["username"])
+	assert.Equal(t, "newuser@example.com", respData["email"])
+
+	exists := funcs.ExistsRecord(sqlDB, "users", map[string]interface{}{
+		"email":    "newuser@example.com",
+		"username": "newuser",
+	})
+	assert.True(t, exists)
+
+	user := repositories.NewUserRepo(db)
+	dbUser, err := user.GetByEmail("newuser@example.com")
+	assert.NoError(t, err)
+	assert.NotNil(t, dbUser)
+
+	passCheck := bcrypt.CompareHashAndPassword(
+		[]byte(dbUser.PasswordHash),
+		[]byte("newpassword123"),
+	)
+	assert.NoError(t, passCheck)
+}
+
+func TestCsrfGet(t *testing.T) {
+	resp, close := request("GET", "/csrf/get", nil, t)
+	defer close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	var respData map[string]string
+	err = json.Unmarshal(bodyBytes, &respData)
+	assert.NoError(t, err)
+
+	assert.NotEmpty(t, respData)
+	assert.NotEmpty(t, respData["csrf_token"])
+
+	cookies := resp.Cookies()
+	var csrfCookie *http.Cookie
+	for _, cookie := range cookies {
+		if cookie.Name == "csrf_token" {
+			csrfCookie = cookie
+			break
+		}
+	}
+	assert.NotNil(t, csrfCookie)
+	assert.NotEmpty(t, csrfCookie.Value)
+
+	// Cookieから出したため、URLデコードを実施
+	decodeToken, err := url.QueryUnescape(csrfCookie.Value)
+	assert.NoError(t, err)
+
+	// クッキーの値とレスポンスの値が同じであることを確認
+	assert.Equal(t, decodeToken, respData["csrf_token"])
+
+	csrfStruct := atylabcsrf.NewCsrfPkgStruct()
+	validErr := csrfStruct.ValidateCSRFCookieToken(
+		decodeToken,
+		os.Getenv("CSRF_TOKEN"),
+		time.Now().Unix(),
+	)
+	assert.NoError(t, validErr)
 }
